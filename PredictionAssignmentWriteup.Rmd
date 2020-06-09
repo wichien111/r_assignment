@@ -1,0 +1,60 @@
+---
+title: "Prediction Assignment Writeup"
+author: "WICHIEN DHAMMAPALO"
+date: "6/9/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+#Load Data Files
+```{R}
+trainingCSV	<-	read.csv("/home/wichien/Documents/Practical Machine Learning/Assignment/pml-training.csv")
+testingCSV	<-	read.csv("/home/wichien/Documents/Practical Machine Learning/Assignment/pml-testing.csv")
+```
+
+#Select interested column data
+```{R}
+features	<-	c("roll_belt", "pitch_belt", "yaw_belt", "total_accel_belt", "gyros_belt_x", "gyros_belt_y", "gyros_belt_z", "accel_belt_x", "accel_belt_y", "accel_belt_z" , "magnet_belt_x", "magnet_belt_y", "magnet_belt_z", "roll_arm", "pitch_arm", "yaw_arm", "total_accel_arm", "gyros_arm_x","gyros_arm_y", "gyros_arm_z","accel_arm_x" , "accel_arm_y", "accel_arm_z", "magnet_arm_x","magnet_arm_y","magnet_arm_z", "roll_dumbbell", "pitch_dumbbell", "yaw_dumbbell",  "total_accel_dumbbell", "gyros_dumbbell_z", "accel_dumbbell_x", "accel_dumbbell_y","accel_dumbbell_z", "magnet_dumbbell_x", "magnet_dumbbell_y", "magnet_dumbbell_z", "roll_forearm", "pitch_forearm", "yaw_forearm", "total_accel_forearm", "classe")
+trainingCSV	<-	trainingCSV [ , features ]
+features    <-  features[-42]                 #Remove classe 
+testingCSV  <-  testingCSV  [ , features ]
+```
+
+#Load library 
+```{R}
+library('randomForest')
+library('caret')
+```
+
+#Partition data to training and testing sets
+```{R}
+inTrain	<-	createDataPartition(trainingCSV$classe, p = 0.7, list = FALSE)
+training  	<-	trainingCSV[ inTrain, ]
+testing	<-	trainingCSV[-inTrain, ]
+```
+
+#Build the model using random forest with cross validation 3 times by using caret
+#as in week3 presentation
+```{R}
+modelFit	<-	train(classe ~., data=training, method="rf", trainControl=trainControl(method="cv", number=3))
+```
+
+#Use the model to predict the testing set
+```{R}
+pred	<-	predict( modelFit, testing )
+```
+
+#Compare results and get the summary of the prediction
+```{R}
+conf <- confusionMatrix(pred, as.factor(testing$classe))
+conf
+```
+
+#After sastified with the accuracy. 
+#Use the model to predict the testing file to get result
+```{R}
+pred <- predict(modelFit, testingCSV)
+pred
+```
